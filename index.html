@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>game</title>
+    <style>
+      /* The canvas always fills the browser window; the game adapts its camera and UI to the shape (Screen.width/height). */
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000;
+                   overscroll-behavior: none; touch-action: none; -webkit-user-select: none; user-select: none;
+                   -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+      #unity-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; display: block;
+                      background: #000; touch-action: none; outline: none; }
+      #loading { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+                 gap: 18px; color: #fff; font: 700 28px/1 Arial, sans-serif; letter-spacing: 4px; }
+      #bar { width: min(60vw, 320px); height: 10px; border-radius: 5px; background: rgba(255,255,255,0.15); overflow: hidden; }
+      #bar-fill { width: 0%; height: 100%; background: #5ad8ff; }
+    </style>
+  </head>
+  <body>
+    <canvas id="unity-canvas" tabindex="-1"></canvas>
+    <div id="loading"><div>game</div><div id="bar"><div id="bar-fill"></div></div></div>
+    <script src="Build/Web.loader.js"></script>
+    <script>
+      var canvas = document.querySelector("#unity-canvas");
+
+      // No scrolling, pinch-zoom, double-tap zoom or long-press menu while playing.
+      ["touchmove", "gesturestart", "gesturechange", "gestureend", "contextmenu", "dblclick"].forEach(function (name) {
+        document.addEventListener(name, function (e) { e.preventDefault(); }, { passive: false });
+      });
+
+      var isTouch = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.maxTouchPoints || 0) > 1;
+      var config = {
+        arguments: [],
+        dataUrl: "Build/Web.data",
+        frameworkUrl: "Build/Web.framework.js",
+        codeUrl: "Build/Web.wasm",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "game",
+        productVersion: "0.1.0",
+        // Phones report a pixel ratio of 3; two is plenty sharp and much lighter for post-processing.
+        devicePixelRatio: Math.min(window.devicePixelRatio || 1, parseFloat(new URLSearchParams(location.search).get('dpr')) || (isTouch ? 1.5 : 1.5)),   // painted 2D with heavy overdraw: 1.5 is crisp enough and keeps phones and retina laptops smooth
+      };
+
+      createUnityInstance(canvas, config, function (progress) {
+        document.getElementById("bar-fill").style.width = (progress * 100) + "%";
+      }).then(function () {
+        document.getElementById("loading").style.display = "none";
+        canvas.focus();
+      }).catch(function (message) {
+        alert(message);
+      });
+    </script>
+  </body>
+</html>
